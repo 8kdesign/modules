@@ -114,6 +114,7 @@
     "phaser": "^3.54.0",
     "plotly.js-dist": "^2.17.1",
     "postinstall-postinstall": "^2.1.0",
+    "precompiled-mqtt": "^4.3.14-beta",
     "react": "^18.2.0",
     "react-ace": "^10.1.0",
     "react-dom": "^18.2.0",
@@ -121,7 +122,8 @@
     "save-file": "^2.3.1",
     "source-academy-utils": "^1.0.0",
     "source-academy-wabt": "^1.0.4",
-    "tslib": "^2.3.1"
+    "tslib": "^2.3.1",
+    "uniqid": "^5.4.0"
   },
   "jest": {
     "projects": [
