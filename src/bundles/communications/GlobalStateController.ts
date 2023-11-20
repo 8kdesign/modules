@@ -1,5 +1,12 @@
 import { MultiUserController } from "./MultiUserController";
 
+export function createGlobalState(
+  topicHeader: string,
+  multiUser: MultiUserController
+) {
+  return new GlobalStateController(topicHeader, multiUser);
+}
+
 export class GlobalStateController {
   private topicHeader: string;
   private multiUser: MultiUserController;

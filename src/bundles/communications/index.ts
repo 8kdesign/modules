@@ -6,7 +6,12 @@
  * @module communications
  * @author Chong Wen Hao
  */
-export * from "./MqttController";
-export * from "./MultiUserController";
-export * from "./GlobalStateController";
-export * from "./RpcController";
+export {
+  STATE_CONNECTED,
+  STATE_DISCONNECTED,
+  STATE_RECONNECTED,
+  STATE_OFFLINE,
+} from "./MqttController";
+export { createMultiUser } from "./MultiUserController";
+export { createGlobalState } from "./GlobalStateController";
+export { createRpc } from "./RpcController";

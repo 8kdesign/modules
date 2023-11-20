@@ -1,5 +1,9 @@
 import { MqttController, STATE_DISCONNECTED } from "./MqttController";
 
+export function createMultiUser() {
+  return new MultiUserController();
+}
+
 export class MultiUserController {
   controller: MqttController | null = null;
   connectionState: string = STATE_DISCONNECTED;
