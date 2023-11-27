@@ -1,4 +1,4 @@
-import { connect, MqttClient } from "mqtt";
+import { connect, MqttClient } from "mqtt/dist/mqtt";
 
 export const STATE_CONNECTED = "Connected";
 export const STATE_DISCONNECTED = "Disconnected";

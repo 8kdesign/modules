@@ -82,13 +82,5 @@ export class GlobalStateController {
       false
     );
   }
-
-  public syncGlobalState() {
-    this.multiUser.controller?.publish(
-      this.topicHeader,
-      JSON.stringify(this.globalState),
-      false
-    );
-  }
 }
 

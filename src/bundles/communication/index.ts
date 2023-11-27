@@ -13,18 +13,69 @@
   To access things like the context or module state you can just import the context
   using the import below
  */
+import context from "js-slang/context";
+import { MultiUserController } from "./MultiUserController";
+import { GlobalStateController } from "./GlobalStateController";
+import { RpcController } from "./RpcController";
 
-import uniqid from "uniqid";
+class CommunicationModuleState {
+  multiUser: MultiUserController;
+  globalState: GlobalStateController | null = null;
+  rpc: RpcController | null = null;
 
-// Try removing this line and it works.
-import { connect, MqttClient } from "mqtt";
+  constructor(address: string, port: number) {
+    let multiUser = new MultiUserController();
+    multiUser.setupController(address, port);
+    this.multiUser = multiUser;
+  }
+}
 
-/**
- * Sample function. Increments a number by 1.
- *
- * @param x The number to be incremented.
- * @returns The incremented value of the number.
- */
-export function sample_function1(x: number): string {
-  return uniqid();
-} // Then any functions or variables you want to expose to the user is exported from the bundle's index.ts file
+let moduleState = new CommunicationModuleState("broker.hivemq.com", 8884);
+context.moduleContexts.communication.state = moduleState;
+
+export {
+  STATE_CONNECTED,
+  STATE_DISCONNECTED,
+  STATE_OFFLINE,
+  STATE_RECONNECTED,
+} from "./MqttController";
+
+// Global State
+
+export function initGlobalState(topicHeader: string) {
+  moduleState.globalState = new GlobalStateController(
+    topicHeader,
+    moduleState.multiUser
+  );
+}
+
+export function getGlobalState() {
+  return moduleState.globalState?.globalState;
+}
+
+export function updateGlobalState(path: string, updatedState: any) {
+  moduleState.globalState?.updateGlobalState(path, updatedState);
+}
+
+// Rpc
+
+export function initRpc(topicHeader: string, userId?: string) {
+  moduleState.rpc = new RpcController(
+    topicHeader,
+    moduleState.multiUser,
+    userId
+  );
+}
+
+export function expose(name: string, func: (...args: any[]) => any) {
+  moduleState.rpc?.expose(name, func);
+}
+
+export function callFunction(
+  receiver: string,
+  name: string,
+  args: any[],
+  callback: (args: any[]) => void
+) {
+  moduleState.rpc?.callFunction(receiver, name, args, callback);
+}
