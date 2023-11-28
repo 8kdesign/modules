@@ -6,14 +6,6 @@ type DeclaredFunction = {
   func: (...args: any[]) => any;
 };
 
-export function createRpc(
-  topicHeader: string,
-  multiUser: MultiUserController,
-  userId?: string
-) {
-  return new RpcController(topicHeader, multiUser, userId);
-}
-
 export class RpcController {
   private topicHeader: string;
   private multiUser: MultiUserController;

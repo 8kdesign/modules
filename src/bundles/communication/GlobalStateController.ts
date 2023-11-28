@@ -1,20 +1,19 @@
 import { MultiUserController } from "./MultiUserController";
 
-export function createGlobalState(
-  topicHeader: string,
-  multiUser: MultiUserController
-) {
-  return new GlobalStateController(topicHeader, multiUser);
-}
-
 export class GlobalStateController {
   private topicHeader: string;
   private multiUser: MultiUserController;
+  private callback: (state: any) => {};
   globalState: any;
 
-  constructor(topicHeader: string, multiUser: MultiUserController) {
+  constructor(
+    topicHeader: string,
+    multiUser: MultiUserController,
+    callback: (state: any) => {}
+  ) {
     this.topicHeader = topicHeader;
     this.multiUser = multiUser;
+    this.callback = callback;
     this.setupGlobalState();
   }
 
@@ -66,7 +65,7 @@ export class GlobalStateController {
 
   private setGlobalState(newState: any) {
     this.globalState = newState;
-    console.log(newState);
+    this.callback(newState);
   }
 
   public updateGlobalState(path: string, updatedState: any) {

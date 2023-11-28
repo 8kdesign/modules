@@ -42,10 +42,14 @@ export {
 
 // Global State
 
-export function initGlobalState(topicHeader: string) {
+export function initGlobalState(
+  topicHeader: string,
+  callback: (state: any) => {}
+) {
   moduleState.globalState = new GlobalStateController(
     topicHeader,
-    moduleState.multiUser
+    moduleState.multiUser,
+    callback
   );
 }
 
