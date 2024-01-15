@@ -1,5 +1,13 @@
 import { MultiUserController } from "./MultiUserController";
 
+/**
+ * Controller for maintaining a global state across all devices.
+ * Depends on MQTT implementation in MultiUserController.
+ *
+ * @param topicHeader Identifier for all global state messages, must not include '/'.
+ * @param multiUser Instance of multi user controller.
+ * @param callback Callback called when the global state changes.
+ */
 export class GlobalStateController {
   private topicHeader: string;
   private multiUser: MultiUserController;
@@ -17,11 +25,15 @@ export class GlobalStateController {
     this.setupGlobalState();
   }
 
+  /**
+   * Sets up callback for global state messages.
+   * Parses received message and stores it as global state.
+   */
   private setupGlobalState() {
     if (this.topicHeader.length <= 0) return;
-    this.multiUser.addMessageCallback("global-state-demo", (topic, message) => {
+    this.multiUser.addMessageCallback(this.topicHeader, (topic, message) => {
       let splitTopic = topic.split("/");
-      if (splitTopic.length < 1 || splitTopic[0] !== this.topicHeader) {
+      if (splitTopic.length < 1) {
         return;
       }
       if (splitTopic.length === 1) {
@@ -63,11 +75,23 @@ export class GlobalStateController {
     });
   }
 
+  /**
+   * Sets the new global state and calls the callback to notify changes.
+   *
+   * @param newState New state received.
+   */
   private setGlobalState(newState: any) {
     this.globalState = newState;
     this.callback(newState);
   }
 
+  /**
+   * Broadcasts the new states to all devices.
+   * Has ability to modify only part of the JSON state.
+   *
+   * @param path Path within the json state.
+   * @param updatedState Replacement value at specified path.
+   */
   public updateGlobalState(path: string, updatedState: any) {
     if (this.topicHeader.length === 0) return;
     let topic = this.topicHeader;
@@ -82,4 +106,3 @@ export class GlobalStateController {
     );
   }
 }
-

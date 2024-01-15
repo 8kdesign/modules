@@ -6,6 +6,13 @@ type DeclaredFunction = {
   func: (...args: any[]) => any;
 };
 
+/**
+ * Controller for RPC communication between 2 devices.
+ *
+ * @param topicHeader Topic header for all RPC communication, must not include '/'.
+ * @param multiUser Instance of multi user controller.
+ * @param userId ID of the user, used for identifying caller/callee.
+ */
 export class RpcController {
   private topicHeader: string;
   private multiUser: MultiUserController;
@@ -22,31 +29,50 @@ export class RpcController {
     this.topicHeader = topicHeader;
     this.multiUser = multiUser;
     this.userId = userId ?? uniqid();
-    console.log("UserID: ", this.userId);
     this.returnTopic = this.topicHeader + "_return/" + this.userId;
-    this.setupRpc();
+    this.multiUser.addMessageCallback(this.returnTopic, (topic, message) => {
+      let messageJson = JSON.parse(message);
+      let callId = messageJson.callId;
+      let callback = this.pendingReturns.get(callId);
+      if (callback) {
+        this.pendingReturns.delete(callId);
+        callback(messageJson.result);
+      }
+    });
   }
 
-  private setupRpc() {
-    this.multiUser.addMessageCallback(this.returnTopic, (topic, message) => {
-      if (topic === this.returnTopic) {
-        // Return
-        let messageJson = JSON.parse(message);
-        let callId = messageJson.callId;
-        let callback = this.pendingReturns.get(callId);
-        if (callback) {
-          this.pendingReturns.delete(callId);
-          callback(messageJson.result);
-        }
-        return;
-      }
-      // Call
+  /**
+   * Sends return value back to caller.
+   *
+   * @param sender ID of caller.
+   * @param callId ID of function call.
+   * @param value Return value for function call.
+   */
+  private returnResponse(sender: string, callId: string, value: any) {
+    let message = {
+      callId: callId,
+      result: value,
+    };
+    let topic = this.topicHeader + "_return/" + sender;
+    this.multiUser.controller?.publish(topic, JSON.stringify(message), false);
+  }
+
+  /**
+   * Exposes a function to other callers.
+   *
+   * @param name Name for the function, cannot include '/'.
+   * @param func Function to run.
+   */
+  public expose(name: string, func: (...args: any[]) => any) {
+    let item = {
+      name: name,
+      func: func,
+    };
+    this.functions.set(name, item);
+    let functionTopic = this.topicHeader + "/" + this.userId + "/" + name;
+    this.multiUser.addMessageCallback(functionTopic, (topic, message) => {
       let splitTopic = topic.split("/");
-      if (
-        splitTopic.length !== 3 ||
-        splitTopic[0] !== this.topicHeader ||
-        splitTopic[1] !== this.userId
-      ) {
+      if (splitTopic.length !== 3) {
         return;
       }
       let parsedMessage = JSON.parse(message);
@@ -69,25 +95,14 @@ export class RpcController {
     });
   }
 
-  private returnResponse(sender: string, callId: string, value: any) {
-    let message = {
-      callId: callId,
-      result: value,
-    };
-    let topic = this.topicHeader + "_return/" + sender;
-    this.multiUser.controller?.publish(topic, JSON.stringify(message), false);
-  }
-
-  public expose(name: string, func: (...args: any[]) => any) {
-    let item = {
-      name: name,
-      func: func,
-    };
-    this.functions.set(name, item);
-    let topic = this.topicHeader + "/" + this.userId + "/" + name;
-    this.multiUser.controller?.subscribe(topic);
-  }
-
+  /**
+   * Calls a function on another device.
+   *
+   * @param receiver ID of the callee.
+   * @param name Name of the function to call.
+   * @param args Argument values of the function.
+   * @param callback Callback for return value received.
+   */
   public callFunction(
     receiver: string,
     name: string,
@@ -106,4 +121,3 @@ export class RpcController {
     this.multiUser.controller?.publish(topic, messageString, false);
   }
 }
-

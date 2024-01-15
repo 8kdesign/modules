@@ -5,6 +5,12 @@ export const STATE_DISCONNECTED = "Disconnected";
 export const STATE_RECONNECTED = "Reconnected";
 export const STATE_OFFLINE = "Offline";
 
+/**
+ * Abstraction of MQTT.
+ *
+ * @param connectionCallback Callback when the connection state changed.
+ * @param messageCallback Callback when a message has been received.
+ */
 export class MqttController {
   private client: MqttClient | null = null;
   private connected: boolean = false;
@@ -22,6 +28,10 @@ export class MqttController {
     this.messageCallback = messageCallback;
   }
 
+  /**
+   * Sets up MQTT client link and connects to it.
+   * Also handles connection status callbacks.
+   */
   public connectClient() {
     if (this.connected || this.address.length === 0) return;
     let link = "wss://" + this.address + ":" + this.port + "/mqtt";
@@ -44,6 +54,9 @@ export class MqttController {
     });
   }
 
+  /**
+   * Disconnects the MQTT client.
+   */
   public disconnect() {
     if (this.client == null) return;
     this.client.end(true);
@@ -51,6 +64,14 @@ export class MqttController {
     this.messageCallback = () => {};
   }
 
+  /**
+   * Broadcasts message to topic.
+   * QoS of 1, all listening devices receive the message at least once.
+   *
+   * @param topic Identifier for group of devices to broadcast to.
+   * @param message Message to broadcast.
+   * @param isRetain Whether the message should be retained.
+   */
   public publish(topic: string, message: string, isRetain: boolean) {
     this.client?.publish(topic, message, {
       qos: 1,
@@ -58,14 +79,23 @@ export class MqttController {
     });
   }
 
+  /**
+   * Subscribes to a topic.
+   *
+   * @param topic Identifier for group of devices receiving the broadcast.
+   */
   public subscribe(topic: string) {
     if (this.client == null) return;
     this.client.subscribe(topic);
     console.log("Subscribed", topic);
   }
 
+  /**
+   * Unsubscribes from a topic.
+   *
+   * @param topic Identifier for group of devices receiving the broadcast.
+   */
   public unsubscribe(topic: string) {
     this.client?.unsubscribe(topic);
   }
 }
-
